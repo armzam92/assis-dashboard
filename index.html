@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assis Growth Dashboard</title>
+<style>
+:root {
+  --hero-bg:#2D2D2D; --hero-text:#FFF; --accent:#E8725C; --accent-light:#F4A59A;
+  --positive:#27AE60; --negative:#E74C3C; --warning:#F39C12;
+  --text:#333; --text-light:#777; --bg:#F5F6F8; --card-bg:#FFF; --border:#E8E8E8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+
+/* Hero */
+.hero{background:var(--hero-bg);color:var(--hero-text);padding:32px 0 28px}
+.hero-title{font-size:1.1rem;font-weight:400;opacity:.7;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.hero-date{font-size:1.8rem;font-weight:700;margin-bottom:20px}
+
+/* Filter bar */
+.filter-bar{
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  background:rgba(255,255,255,.08);border-radius:10px;padding:10px 16px;margin-bottom:20px;
+}
+.filter-bar button{
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;padding:6px 12px;font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.filter-bar button:hover{background:rgba(255,255,255,.18);color:#fff}
+.filter-bar .nav-btn{font-size:1rem;padding:6px 10px;font-weight:700}
+.filter-bar .date-display{font-size:1rem;font-weight:600;min-width:160px;text-align:center}
+.filter-bar .separator{flex:1}
+.filter-bar label{font-size:.8rem;display:flex;align-items:center;gap:6px;opacity:.7;cursor:pointer;transition:opacity .15s}
+.filter-bar label:hover{opacity:1}
+.filter-bar input[type=checkbox]{accent-color:var(--accent)}
+.filter-bar select{
+  background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;padding:6px 10px;font-size:.82rem;font-family:inherit;cursor:pointer;
+  max-width:200px;
+}
+.filter-bar select option{background:#333;color:#fff}
+
+/* Period toggle group */
+.period-toggle{display:flex;background:rgba(0,0,0,.25);border-radius:8px;padding:3px;gap:2px}
+.period-toggle button{
+  background:transparent;color:rgba(255,255,255,.5);border:none;
+  border-radius:6px;padding:6px 18px;font-size:.85rem;cursor:pointer;
+  font-family:inherit;font-weight:500;transition:all .15s;white-space:nowrap;
+}
+.period-toggle button:hover{color:rgba(255,255,255,.8)}
+.period-toggle button.active{background:var(--accent);color:#fff;font-weight:600}
+
+/* Goal */
+.goal-section{background:rgba(255,255,255,.08);border-radius:10px;padding:16px 20px;margin-bottom:20px}
+.goal-label{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;opacity:.6;margin-bottom:6px}
+.goal-row{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+.goal-text{font-size:1.3rem;font-weight:700;white-space:nowrap}
+.goal-text .accent{color:var(--accent)}
+.progress-bar{flex:1;height:10px;background:rgba(255,255,255,.15);border-radius:5px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:5px;transition:width .3s}
+.goal-pace{font-size:.85rem;opacity:.7}
+
+/* KPI pills */
+.kpi-pills{display:flex;gap:12px;flex-wrap:wrap}
+.kpi-pill{background:rgba(255,255,255,.08);border-radius:8px;padding:10px 16px;flex:1;min-width:130px;text-align:center}
+.kpi-pill-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1px;opacity:.5;margin-bottom:2px}
+.kpi-pill-value{font-size:1.2rem;font-weight:700}
+
+/* Sections */
+.section{padding:28px 0}
+.section-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* Cards */
+.cards-row{display:flex;gap:16px;flex-wrap:wrap}
+.highlight-card{flex:1;min-width:250px;background:var(--card-bg);border-radius:10px;padding:18px 20px;border-left:4px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.highlight-card.green{border-left-color:var(--positive)}
+.highlight-card.red{border-left-color:var(--negative)}
+.highlight-card.orange{border-left-color:var(--warning)}
+.highlight-card.accent{border-left-color:var(--accent)}
+.card-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:4px}
+.card-value{font-size:1.6rem;font-weight:700;margin-bottom:2px}
+.card-detail{font-size:.85rem;color:var(--text-light)}
+
+/* AI */
+.ai-box{background:var(--card-bg);border-radius:10px;padding:20px 24px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid var(--accent)}
+.ai-action{background:#FFF3E0;border-radius:6px;padding:10px 14px;margin-top:10px;font-weight:600;font-size:.9rem;color:#E65100}
+
+/* Funnel */
+.funnel{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;background:var(--card-bg);border-radius:10px;padding:28px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.funnel-step{text-align:center;padding:0 20px;min-width:120px}
+.funnel-step-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:4px}
+.funnel-step-value{font-size:2rem;font-weight:800;color:var(--text)}
+.funnel-arrow{display:flex;flex-direction:column;align-items:center;padding:0 6px;color:var(--text-light)}
+.funnel-arrow-line{font-size:1.2rem;line-height:1}
+.funnel-arrow-rate{font-size:.7rem;font-weight:600;color:var(--accent);white-space:nowrap}
+
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;background:var(--card-bg);border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.data-table th{background:#F8F8F8;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);padding:10px 14px;text-align:left;font-weight:600;border-bottom:1px solid var(--border)}
+.data-table td{padding:10px 14px;border-bottom:1px solid #F0F0F0;font-size:.9rem}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.data-table .bold{font-weight:700}
+
+/* Metrics grid */
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.metric-card{background:var(--card-bg);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.metric-card-title{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:12px;font-weight:700}
+.metric-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F5F5F5;font-size:.9rem}
+.metric-row:last-child{border-bottom:none}
+.metric-label{color:var(--text-light)}
+.metric-value{font-weight:600}
+
+/* Colors */
+.positive{color:var(--positive)}.negative{color:var(--negative)}.neutral{color:var(--text-light)}
+
+/* Segment bars */
+.seg-bar-wrap{margin-bottom:10px}
+.seg-bar-label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:3px}
+.seg-bar{height:6px;background:#EEE;border-radius:3px;overflow:hidden}
+.seg-bar-fill{height:100%;background:var(--accent);border-radius:3px}
+
+/* Comparison indicator */
+.comp-badge{display:inline-block;font-size:.75rem;padding:2px 8px;border-radius:4px;margin-left:8px;font-weight:600}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--card-bg);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.chart-card-title{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:4px;font-weight:700}
+.chart-card-value{font-size:1.6rem;font-weight:700;margin-bottom:12px}
+.chart-card-value .sub{font-size:.8rem;font-weight:500;color:var(--text-light);margin-left:6px}
+.chart-svg{width:100%;height:120px;display:block}
+.chart-labels{display:flex;justify-content:space-between;font-size:.65rem;color:var(--text-light);margin-top:4px;padding:0 2px}
+.comp-badge.positive{background:#E8F5E9;color:var(--positive)}
+.comp-badge.negative{background:#FFEBEE;color:var(--negative)}
+.comp-badge.neutral{background:#F5F5F5;color:var(--text-light)}
+
+.footer{text-align:center;padding:24px 0;font-size:.75rem;color:var(--text-light)}
+
+@media(max-width:768px){
+  .kpi-pills{gap:8px}.kpi-pill{min-width:100px;padding:8px 10px}.kpi-pill-value{font-size:1rem}
+  .cards-row{flex-direction:column}.highlight-card{min-width:auto}
+  .funnel{flex-direction:column;gap:8px}.funnel-arrow{transform:rotate(90deg)}.funnel-step-value{font-size:1.5rem}
+  .metrics-grid{grid-template-columns:1fr}.hero-date{font-size:1.4rem}
+  .filter-bar{gap:8px}.filter-bar .date-display{min-width:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- Hero + Filters -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-title">Growth Report</div>
+    <div class="hero-date" id="hero-date"></div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="period-toggle" id="period-toggle">
+        <button data-period="dia" class="active">Dia</button>
+        <button data-period="semana">Semana</button>
+        <button data-period="mes">M&ecirc;s</button>
+      </div>
+      <button class="nav-btn" id="btn-prev">&larr;</button>
+      <div class="date-display" id="date-display"></div>
+      <button class="nav-btn" id="btn-next">&rarr;</button>
+      <select id="campaign-filter"><option value="all">Todas campanhas</option></select>
+      <div class="separator"></div>
+      <label><input type="checkbox" id="chk-compare"> vs Per&iacute;odo Anterior</label>
+    </div>
+
+    <div id="goal-section"></div>
+    <div id="kpi-pills"></div>
+  </div>
+</div>
+
+<div id="cards-section"></div>
+<div id="ai-section"></div>
+<div id="funnel-section"></div>
+<div id="charts-section"></div>
+<div id="table-section"></div>
+<div id="period-metrics"></div>
+<div id="campaigns-section"></div>
+<div id="stripe-section"></div>
+<div id="segments-section"></div>
+<div id="economics-section"></div>
+
+<div class="footer">
+  Gerado em 13/03/2026 10:46 &middot; Metabase + PostHog + Stripe + Meta Ads
+</div>
+
+<script>
+// ─── Embedded Data ───
+const DAYS = {"2026-03-01": {"visitors": 457, "leads": 10, "mql": 7, "pagantes": 0, "spend": 769.85, "impressions": 16964, "clicks": 355, "cpl": 76.985, "cac": 0, "taxa_lead": 2.1881838074398248, "taxa_mql": 70.0, "taxa_conv": 0.0, "visitas_source": "posthog", "stripe": {"new_subs": 0, "new_mrr": 0.0, "revenue": 2222.9, "churned": 12, "churn_voluntary": 8, "churn_involuntary": 4, "churn_trial": 0, "churn_rate": 1.6643550624133148, "churn_wtd": 59, "churn_wtd_rate": 8.183079056865465, "churn_wtd_voluntary": 34, "churn_wtd_involuntary": 25, "churn_wtd_by_product": {"Bot IA": {"total": 7, "voluntary": 7, "involuntary": 0, "trial": 0}, "Pré-reserva IA de primeiro atendimento Assis": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 51, "voluntary": 26, "involuntary": 25, "trial": 0}}, "churn_mtd": 12, "churn_mtd_rate": 1.6643550624133148, "churn_mtd_voluntary": 8, "churn_mtd_involuntary": 4, "churn_mtd_by_product": {"Bot IA": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 11, "voluntary": 7, "involuntary": 4, "trial": 0}}, "total_mrr": 64130.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {}, "churn_by_product": {"Bot IA": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 11, "voluntary": 7, "involuntary": 4, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 0.4807692307692308, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 2.1825396825396823, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Fitness": 1, "Advocacia": 1, "Agência de propaganda": 1, "Vestuário": 1, "Veículos, Créditos, Consórcios": 1}, "campaigns": [{"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 4, "mql": 2, "pagantes": 0, "spend": 378.18}, {"name": "Qualified Lead", "key": "120241791576860374", "leads": 3, "mql": 3, "pagantes": 0, "spend": 391.67}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 2, "mql": 1, "pagantes": 0, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0.0}], "date": "2026-03-01", "saved_at": "2026-03-12T13:07:58.732859"}, "2026-03-02": {"visitors": 465, "leads": 41, "mql": 18, "pagantes": 7, "spend": 806.31, "impressions": 17033, "clicks": 312, "cpl": 19.666097560975608, "cac": 115.18714285714285, "taxa_lead": 8.817204301075268, "taxa_mql": 43.90243902439025, "taxa_conv": 38.88888888888889, "visitas_source": "posthog", "stripe": {"new_subs": 7, "new_mrr": 495.0, "revenue": 1858.0, "churned": 7, "churn_voluntary": 5, "churn_involuntary": 2, "churn_trial": 0, "churn_rate": 0.9708737864077669, "churn_wtd": 7, "churn_wtd_rate": 0.9708737864077669, "churn_wtd_voluntary": 5, "churn_wtd_involuntary": 2, "churn_wtd_by_product": {"Bot IA": {"total": 4, "voluntary": 4, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 3, "voluntary": 1, "involuntary": 2, "trial": 0}}, "churn_mtd": 19, "churn_mtd_rate": 2.6352288488210815, "churn_mtd_voluntary": 13, "churn_mtd_involuntary": 6, "churn_mtd_by_product": {"Bot IA": {"total": 5, "voluntary": 5, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 14, "voluntary": 8, "involuntary": 6, "trial": 0}}, "total_mrr": 64130.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 3, "mrr": 297.0}, "Assis Pro": {"count": 4, "mrr": 198.0}}, "churn_by_product": {"Bot IA": {"total": 4, "voluntary": 4, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 3, "voluntary": 1, "involuntary": 2, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 1.9230769230769231, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 0.5952380952380952, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Veículos, Créditos, Consórcios": 2, "Oii": 1, "Otica": 1, "adv": 1, "Fábrica de cosméticos": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 15, "mql": 9, "pagantes": 1, "spend": 455.69}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 13, "mql": 2, "pagantes": 1, "spend": 350.62}, {"name": "23233480441", "key": "23233480441", "leads": 5, "mql": 4, "pagantes": 0, "spend": 0}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 4, "mql": 1, "pagantes": 0, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 3, "mql": 2, "pagantes": 0, "spend": 0.0}, {"name": "Tiktok bio", "key": "Tiktok_bio", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}], "date": "2026-03-02", "saved_at": "2026-03-12T13:10:19.951160"}, "2026-03-03": {"visitors": 407, "leads": 74, "mql": 28, "pagantes": 3, "spend": 888.6800000000001, "impressions": 18434, "clicks": 377, "cpl": 12.00918918918919, "cac": 296.2266666666667, "taxa_lead": 18.181818181818183, "taxa_mql": 37.83783783783784, "taxa_conv": 10.714285714285714, "visitas_source": "posthog", "stripe": {"new_subs": 3, "new_mrr": 297.0, "revenue": 2013.8, "churned": 9, "churn_voluntary": 7, "churn_involuntary": 2, "churn_trial": 0, "churn_rate": 1.248266296809986, "churn_wtd": 16, "churn_wtd_rate": 2.219140083217753, "churn_wtd_voluntary": 12, "churn_wtd_involuntary": 4, "churn_wtd_by_product": {"Bot IA": {"total": 11, "voluntary": 11, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 5, "voluntary": 1, "involuntary": 4, "trial": 0}}, "churn_mtd": 28, "churn_mtd_rate": 3.8834951456310676, "churn_mtd_voluntary": 20, "churn_mtd_involuntary": 8, "churn_mtd_by_product": {"Bot IA": {"total": 12, "voluntary": 12, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 16, "voluntary": 8, "involuntary": 8, "trial": 0}}, "total_mrr": 64229.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 3, "mrr": 297.0}}, "churn_by_product": {"Bot IA": {"total": 7, "voluntary": 7, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 2, "voluntary": 0, "involuntary": 2, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 3.3653846153846154, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 0.3968253968253968, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Imobiliário": 3, "Fazenda": 2, "Vendas, amazolé": 1, "Estética avançada beleza e saúde": 1, "Estética": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 31, "mql": 10, "pagantes": 0, "spend": 494.89}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 26, "mql": 12, "pagantes": 0, "spend": 393.79}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 8, "mql": 3, "pagantes": 1, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 5, "mql": 1, "pagantes": 0, "spend": 0.0}, {"name": "23233480441", "key": "23233480441", "leads": 3, "mql": 1, "pagantes": 1, "spend": 0}, {"name": "(template erro)", "key": "{{campaign.name}}", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0.0}], "date": "2026-03-03", "saved_at": "2026-03-12T13:12:45.277457"}, "2026-03-04": {"visitors": 513, "leads": 84, "mql": 29, "pagantes": 8, "spend": 704.28, "impressions": 15619, "clicks": 324, "cpl": 8.384285714285713, "cac": 88.035, "taxa_lead": 16.374269005847953, "taxa_mql": 34.523809523809526, "taxa_conv": 27.586206896551722, "visitas_source": "posthog", "stripe": {"new_subs": 8, "new_mrr": 792.0, "revenue": 2593.9, "churned": 9, "churn_voluntary": 9, "churn_involuntary": 0, "churn_trial": 0, "churn_rate": 1.248266296809986, "churn_wtd": 25, "churn_wtd_rate": 3.467406380027739, "churn_wtd_voluntary": 21, "churn_wtd_involuntary": 4, "churn_wtd_by_product": {"Bot IA": {"total": 15, "voluntary": 15, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 10, "voluntary": 6, "involuntary": 4, "trial": 0}}, "churn_mtd": 37, "churn_mtd_rate": 5.131761442441054, "churn_mtd_voluntary": 29, "churn_mtd_involuntary": 8, "churn_mtd_by_product": {"Bot IA": {"total": 16, "voluntary": 16, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 21, "voluntary": 13, "involuntary": 8, "trial": 0}}, "total_mrr": 64229.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 8, "mrr": 792.0}}, "churn_by_product": {"Bot IA": {"total": 4, "voluntary": 4, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 5, "voluntary": 5, "involuntary": 0, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 1.9230769230769231, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 0.992063492063492, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Imobiliário": 6, "Corretor de Seguros": 4, "Veículos, Créditos, Consórcios": 2, "Marmitaria pizzaria e lanchonete": 1, "Studio de beleza": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 40, "mql": 11, "pagantes": 0, "spend": 376}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 34, "mql": 14, "pagantes": 0, "spend": 328.28}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 4, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 4, "mql": 3, "pagantes": 1, "spend": 0.0}, {"name": "23233480441", "key": "23233480441", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0}, {"name": "gabarito das ias", "key": "gabarito_das_ias", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}], "date": "2026-03-04", "saved_at": "2026-03-12T13:15:08.522483"}, "2026-03-05": {"visitors": 461, "leads": 68, "mql": 20, "pagantes": 2, "spend": 673.46, "impressions": 17861, "clicks": 334, "cpl": 9.903823529411765, "cac": 336.73, "taxa_lead": 14.75054229934924, "taxa_mql": 29.411764705882355, "taxa_conv": 10.0, "visitas_source": "posthog", "stripe": {"new_subs": 2, "new_mrr": 198.0, "revenue": 2650.0, "churned": 1, "churn_voluntary": 1, "churn_involuntary": 0, "churn_trial": 0, "churn_rate": 0.13869625520110956, "churn_wtd": 26, "churn_wtd_rate": 3.6061026352288486, "churn_wtd_voluntary": 22, "churn_wtd_involuntary": 4, "churn_wtd_by_product": {"Bot IA": {"total": 16, "voluntary": 16, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 10, "voluntary": 6, "involuntary": 4, "trial": 0}}, "churn_mtd": 38, "churn_mtd_rate": 5.270457697642163, "churn_mtd_voluntary": 30, "churn_mtd_involuntary": 8, "churn_mtd_by_product": {"Bot IA": {"total": 17, "voluntary": 17, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 21, "voluntary": 13, "involuntary": 8, "trial": 0}}, "total_mrr": 64229.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 2, "mrr": 198.0}}, "churn_by_product": {"Bot IA": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 0.4807692307692308, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 0.0, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Veículos, Créditos, Consórcios": 3, "Imobiliário": 2, "Eletricista": 1, "Roupas": 1, "Móveis planejados": 1}, "campaigns": [{"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 33, "mql": 11, "pagantes": 1, "spend": 329.62}, {"name": "Qualified Lead", "key": "120241791576860374", "leads": 24, "mql": 7, "pagantes": 0, "spend": 343.84}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 5, "mql": 2, "pagantes": 1, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 4, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "23233480441", "key": "23233480441", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0}, {"name": "(template erro)", "key": "{{campaign.id}}", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}], "date": "2026-03-05", "saved_at": "2026-03-12T13:17:33.828794"}, "2026-03-06": {"visitors": 404, "leads": 63, "mql": 13, "pagantes": 4, "spend": 653.5699999999999, "impressions": 14988, "clicks": 307, "cpl": 10.374126984126983, "cac": 163.39249999999998, "taxa_lead": 15.594059405940595, "taxa_mql": 20.634920634920633, "taxa_conv": 30.76923076923077, "visitas_source": "posthog", "stripe": {"new_subs": 4, "new_mrr": 396.0, "revenue": 2079.0, "churned": 8, "churn_voluntary": 3, "churn_involuntary": 5, "churn_trial": 0, "churn_rate": 1.10803324099723, "churn_wtd": 34, "churn_wtd_rate": 4.7091412742382275, "churn_wtd_voluntary": 25, "churn_wtd_involuntary": 9, "churn_wtd_by_product": {"Bot IA": {"total": 18, "voluntary": 18, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 16, "voluntary": 7, "involuntary": 9, "trial": 0}}, "churn_mtd": 46, "churn_mtd_rate": 6.3711911357340725, "churn_mtd_voluntary": 33, "churn_mtd_involuntary": 13, "churn_mtd_by_product": {"Bot IA": {"total": 19, "voluntary": 19, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 27, "voluntary": 14, "involuntary": 13, "trial": 0}}, "total_mrr": 64526.90000000003, "active_subs": 722, "subs_by_product": {"Bot IA": 209, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 4, "mrr": 396.0}}, "churn_by_product": {"Bot IA": {"total": 2, "voluntary": 2, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 6, "voluntary": 1, "involuntary": 5, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 0.9569377990430622, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 1.1904761904761905, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Veículos, Créditos, Consórcios": 4, "Imobiliário": 3, "Banheiras , SPAs e Ofurôs": 1, "Comercial": 1, "Ok": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 34, "mql": 6, "pagantes": 1, "spend": 315.42}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 19, "mql": 4, "pagantes": 0, "spend": 338.15}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 6, "mql": 2, "pagantes": 1, "spend": 0.0}, {"name": "23233480441", "key": "23233480441", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "ai bot early access", "key": "ai_bot_early_access", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0.0}, {"name": "(template erro)", "key": "{{campaign.name}}", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}], "date": "2026-03-06", "saved_at": "2026-03-12T13:19:53.046542"}, "2026-03-07": {"visitors": 404, "leads": 89, "mql": 30, "pagantes": 3, "spend": 700.37, "impressions": 15387, "clicks": 312, "cpl": 7.869325842696629, "cac": 233.45666666666668, "taxa_lead": 22.02970297029703, "taxa_mql": 33.70786516853933, "taxa_conv": 10.0, "visitas_source": "posthog", "stripe": {"new_subs": 3, "new_mrr": 297.0, "revenue": 1253.0, "churned": 3, "churn_voluntary": 1, "churn_involuntary": 2, "churn_trial": 0, "churn_rate": 0.41551246537396125, "churn_wtd": 37, "churn_wtd_rate": 5.124653739612189, "churn_mtd": 49, "churn_mtd_rate": 6.786703601108034, "total_mrr": 63932.90000000003, "active_subs": 722, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Analytics": 1, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 3, "mrr": 297.0}}, "churn_by_product": {"Assis Pro": {"total": 3, "voluntary": 1, "involuntary": 2, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 0.0, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 0.5952380952380952, "Assis Enterprise": 0.0, "Assis Analytics": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 5, "pending_by_product": {"Assis Pro": 4, "Bot IA": 1}}, "top_segments": {"Imobiliário": 5, "Corretor de Seguros": 3, "Veículos, Créditos, Consórcios": 2, "SOLAR": 1, "Perfumaria árabe": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 41, "mql": 12, "pagantes": 0, "spend": 373.14}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 33, "mql": 11, "pagantes": 0, "spend": 327.23}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 7, "mql": 4, "pagantes": 1, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 4, "mql": 2, "pagantes": 0, "spend": 0.0}, {"name": "23233480441", "key": "23233480441", "leads": 3, "mql": 1, "pagantes": 0, "spend": 0}, {"name": "(template erro)", "key": "{{campaign.name}}", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}], "date": "2026-03-07", "saved_at": "2026-03-12T11:08:14.508277"}, "2026-03-08": {"visitors": 377, "leads": 97, "mql": 21, "pagantes": 2, "spend": 848.0699999999999, "impressions": 22578, "clicks": 447, "cpl": 8.742989690721648, "cac": 424.03499999999997, "taxa_lead": 25.72944297082228, "taxa_mql": 21.649484536082475, "taxa_conv": 9.523809523809524, "visitas_source": "api", "stripe": {"new_subs": 2, "new_mrr": 198.0, "revenue": 1603.9, "churned": 9, "churn_voluntary": 3, "churn_involuntary": 6, "churn_trial": 0, "churn_rate": 1.2465373961218837, "churn_wtd": 46, "churn_wtd_rate": 6.3711911357340725, "churn_mtd": 58, "churn_mtd_rate": 8.033240997229916, "total_mrr": 63932.90000000003, "active_subs": 722, "subs_by_product": {"Bot IA": 208, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Analytics": 1, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 2, "mrr": 198.0}}, "churn_by_product": {"Bot IA": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 7, "voluntary": 2, "involuntary": 5, "trial": 0}, "Assis Enterprise": {"total": 1, "voluntary": 0, "involuntary": 1, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 0.4807692307692308, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 1.3888888888888888, "Assis Enterprise": 50.0, "Assis Analytics": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 5, "pending_by_product": {"Assis Pro": 4, "Bot IA": 1}}, "top_segments": {"Imobiliário": 2, "Veículos, Créditos, Consórcios": 2, "Barbearia": 1, "Oficina mecânica": 1, "geral": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 56, "mql": 11, "pagantes": 0, "spend": 449.62}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 30, "mql": 6, "pagantes": 0, "spend": 398.45}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 5, "mql": 3, "pagantes": 0, "spend": 0.0}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 5, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "(template erro)", "key": "{{campaign.name}}", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0.0}], "date": "2026-03-08", "saved_at": "2026-03-12T11:10:49.047062"}, "2026-03-09": {"visitors": 647, "leads": 116, "mql": 29, "pagantes": 7, "spend": 1065.87, "impressions": 33898, "clicks": 574, "cpl": 9.18853448275862, "cac": 152.26714285714283, "taxa_lead": 17.928902627511594, "taxa_mql": 25.0, "taxa_conv": 24.137931034482758, "visitas_source": "posthog", "stripe": {"new_subs": 7, "new_mrr": 693.0, "revenue": 2738.0, "churned": 16, "churn_voluntary": 4, "churn_involuntary": 12, "churn_trial": 0, "churn_rate": 2.219140083217753, "churn_wtd": 16, "churn_wtd_rate": 2.219140083217753, "churn_mtd": 74, "churn_mtd_rate": 10.263522884882107, "total_mrr": 64130.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 207, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Analytics": 1, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 7, "mrr": 693.0}}, "churn_by_product": {"Bot IA": {"total": 3, "voluntary": 3, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 13, "voluntary": 1, "involuntary": 12, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 1.4492753623188406, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 2.579365079365079, "Assis Enterprise": 0.0, "Assis Analytics": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 5, "pending_by_product": {"Assis Pro": 4, "Bot IA": 1}}, "top_segments": {"Imobiliário": 5, "Veículos, Créditos, Consórcios": 3, "Vendas": 2, "Salão de beleza": 2, "Corretor de Seguros": 1}, "campaigns": [{"name": "Qualified Lead", "leads": 70, "mql": 17, "pagantes": 0, "spend": 491.1100000000001, "key": "120241791576860374"}, {"name": "Obj Leads Chat Bot IA", "leads": 30, "mql": 8, "pagantes": 2, "spend": 574.7599999999998, "key": "ObjLeads_ChatBotIA_ca120240970930170374"}, {"name": "(sem campanha)", "leads": 8, "mql": 3, "pagantes": 1, "spend": 0, "key": "(sem campanha)"}, {"name": "Instagram bio", "leads": 5, "mql": 0, "pagantes": 0, "spend": 0, "key": "Instagram_bio"}, {"name": "23233480441", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0, "key": "23233480441"}, {"name": "(template erro)", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0, "key": "{{campaign.name}}"}, {"name": "ai bot early access", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0, "key": "ai_bot_early_access"}], "date": "2026-03-09", "saved_at": "2026-03-12T09:05:24.056448"}, "2026-03-10": {"visitors": 767, "leads": 101, "mql": 29, "pagantes": 7, "spend": 1065.02, "impressions": 30828, "clicks": 518, "cpl": 10.544752475247524, "cac": 152.1457142857143, "taxa_lead": 13.168187744458931, "taxa_mql": 28.71287128712871, "taxa_conv": 24.137931034482758, "visitas_source": "posthog", "stripe": {"new_subs": 7, "new_mrr": 673.0, "revenue": 2382.0, "churned": 19, "churn_voluntary": 4, "churn_involuntary": 15, "churn_trial": 0, "churn_rate": 2.6352288488210815, "churn_wtd": 35, "churn_wtd_rate": 4.854368932038835, "churn_mtd": 93, "churn_mtd_rate": 12.89875173370319, "total_mrr": 64130.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 207, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Analytics": 1, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 6, "mrr": 594.0}, "Assis Pro - Anual": {"count": 1, "mrr": 79.0}}, "churn_by_product": {"Bot IA": {"total": 3, "voluntary": 3, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 16, "voluntary": 1, "involuntary": 15, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 1.4492753623188406, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 3.1746031746031744, "Assis Enterprise": 0.0, "Assis Analytics": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 5, "pending_by_product": {"Assis Pro": 4, "Bot IA": 1}}, "top_segments": {"Imobiliário": 9, "Veículos, Créditos, Consórcios": 3, "Pastelaria": 1, "Serviço": 1, "Salão de beleza": 1}, "campaigns": [{"name": "Qualified Lead", "leads": 53, "mql": 15, "pagantes": 0, "spend": 392.4200000000001, "key": "120241791576860374"}, {"name": "Obj Leads Chat Bot IA", "leads": 32, "mql": 6, "pagantes": 0, "spend": 510.40999999999985, "key": "ObjLeads_ChatBotIA_ca120240970930170374"}, {"name": "(sem campanha)", "leads": 6, "mql": 3, "pagantes": 2, "spend": 0, "key": "(sem campanha)"}, {"name": "Instagram bio", "leads": 5, "mql": 1, "pagantes": 1, "spend": 0, "key": "Instagram_bio"}, {"name": "23233480441", "leads": 4, "mql": 3, "pagantes": 0, "spend": 0, "key": "23233480441"}, {"name": "ai bot early access", "leads": 1, "mql": 1, "pagantes": 1, "spend": 0, "key": "ai_bot_early_access"}], "date": "2026-03-10", "saved_at": "2026-03-12T09:07:58.352102"}, "2026-03-11": {"visitors": 841, "leads": 138, "mql": 51, "pagantes": 10, "spend": 1111.92, "impressions": 37971, "clicks": 693, "cpl": 8.057391304347826, "cac": 111.19200000000001, "taxa_lead": 16.409036860879905, "taxa_mql": 36.95652173913043, "taxa_conv": 19.607843137254903, "visitas_source": "posthog", "stripe": {"new_subs": 10, "new_mrr": 1042.0, "revenue": 2344.0, "churned": 10, "churn_voluntary": 3, "churn_involuntary": 7, "churn_trial": 0, "churn_rate": 1.3869625520110958, "churn_wtd": 45, "churn_wtd_rate": 6.2413314840499305, "churn_mtd": 103, "churn_mtd_rate": 14.285714285714285, "total_mrr": 64229.90000000003, "active_subs": 721, "subs_by_product": {"Bot IA": 207, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Analytics": 1, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 9, "mrr": 943.0}, "Assis Pro - Live": {"count": 1, "mrr": 99.0}}, "churn_by_product": {"Bot IA": {"total": 2, "voluntary": 1, "involuntary": 1, "trial": 0}, "Assis Pro": {"total": 7, "voluntary": 2, "involuntary": 5, "trial": 0}, "Assis Enterprise": {"total": 1, "voluntary": 0, "involuntary": 1, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 0.966183574879227, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 1.3888888888888888, "Assis Enterprise": 50.0, "Assis Analytics": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 5, "pending_by_product": {"Assis Pro": 4, "Bot IA": 1}}, "top_segments": {"Imobiliário": 8, "Veículos, Créditos, Consórcios": 5, "Corretor de Seguros": 4, "Oi bbom dia boa  tarde ou boa noite": 1, "Vendas de embalagens": 1}, "campaigns": [{"name": "Qualified Lead", "leads": 62, "mql": 20, "pagantes": 1, "spend": 406.2399999999998, "key": "120241791576860374"}, {"name": "Obj Leads Chat Bot IA", "leads": 36, "mql": 10, "pagantes": 0, "spend": 451.6300000000001, "key": "ObjLeads_ChatBotIA_ca120240970930170374"}, {"name": "(sem campanha)", "leads": 11, "mql": 5, "pagantes": 0, "spend": 0, "key": "(sem campanha)"}, {"name": "Instagram bio", "leads": 5, "mql": 1, "pagantes": 0, "spend": 0, "key": "Instagram_bio"}, {"name": "23233480441", "leads": 5, "mql": 2, "pagantes": 0, "spend": 0, "key": "23233480441"}, {"name": "Salesled Growth Obj Leads Chat Bot IA", "leads": 19, "mql": 13, "pagantes": 0, "spend": 416.24, "key": "120242459559360374"}], "date": "2026-03-11", "saved_at": "2026-03-12T08:57:54.406395"}, "2026-03-12": {"visitors": 869, "leads": 129, "mql": 42, "pagantes": 13, "spend": 1117.4499999999998, "impressions": 47105, "clicks": 719, "cpl": 8.662403100775192, "cac": 85.9576923076923, "taxa_lead": 14.844649021864212, "taxa_mql": 32.55813953488372, "taxa_conv": 30.952380952380953, "visitas_source": "posthog", "stripe": {"new_subs": 13, "new_mrr": 1121.0, "revenue": 2704.0, "churned": 16, "churn_voluntary": 7, "churn_involuntary": 9, "churn_trial": 0, "churn_rate": 2.203856749311295, "churn_wtd": 62, "churn_wtd_rate": 8.539944903581267, "churn_wtd_voluntary": 18, "churn_wtd_involuntary": 44, "churn_wtd_by_product": {"Bot IA": {"total": 19, "voluntary": 13, "involuntary": 6, "trial": 0}, "Assis Pro": {"total": 41, "voluntary": 4, "involuntary": 37, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Enterprise": {"total": 1, "voluntary": 0, "involuntary": 1, "trial": 0}}, "churn_mtd": 120, "churn_mtd_rate": 16.528925619834713, "churn_mtd_voluntary": 55, "churn_mtd_involuntary": 65, "churn_mtd_by_product": {"Bot IA": {"total": 39, "voluntary": 33, "involuntary": 6, "trial": 0}, "Assis Pro": {"total": 78, "voluntary": 21, "involuntary": 57, "trial": 0}, "Assis Enterprise": {"total": 2, "voluntary": 0, "involuntary": 2, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}}, "total_mrr": 64977.90000000003, "active_subs": 726, "subs_by_product": {"Bot IA": 212, "Assis Pro": 505, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 12, "mrr": 1042.0}, "Assis Pro": {"count": 1, "mrr": 79.0}}, "churn_by_product": {"Bot IA": {"total": 11, "voluntary": 6, "involuntary": 5, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 4, "voluntary": 0, "involuntary": 4, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 5.188679245283019, "Assis Pro": 0.7920792079207921, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Corretor de Seguros": 5, "Imobiliário": 3, "Veículos, Créditos, Consórcios": 3, "Iptv": 2, "Tecnologia": 2}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 46, "mql": 15, "pagantes": 1, "spend": 361.46}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 42, "mql": 14, "pagantes": 0, "spend": 496.36}, {"name": "Salesled Growth Obj Leads Chat Bot IA", "key": "120242459559360374", "leads": 18, "mql": 8, "pagantes": 0, "spend": 259.63}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 14, "mql": 3, "pagantes": 2, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 5, "mql": 1, "pagantes": 0, "spend": 0.0}, {"name": "23233480441", "key": "23233480441", "leads": 2, "mql": 0, "pagantes": 0, "spend": 0}, {"name": "Update de Produto - 18/02", "key": "Update de Produto - 18/02", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "(template erro)", "key": "{{campaign.id}}", "leads": 1, "mql": 1, "pagantes": 0, "spend": 0.0}], "date": "2026-03-12", "saved_at": "2026-03-13T10:46:49.319543"}, "2026-03-13": {"visitors": 307, "leads": 74, "mql": 29, "pagantes": 1, "spend": 218.83999999999997, "impressions": 8164, "clicks": 149, "cpl": 2.957297297297297, "cac": 218.83999999999997, "taxa_lead": 24.104234527687296, "taxa_mql": 39.189189189189186, "taxa_conv": 3.4482758620689653, "visitas_source": "api", "stripe": {"new_subs": 1, "new_mrr": 349.0, "revenue": 0, "churned": 7, "churn_voluntary": 1, "churn_involuntary": 6, "churn_trial": 0, "churn_rate": 0.9668508287292817, "churn_wtd": 69, "churn_wtd_rate": 9.530386740331492, "churn_wtd_voluntary": 19, "churn_wtd_involuntary": 50, "churn_wtd_by_product": {"Bot IA": {"total": 22, "voluntary": 14, "involuntary": 8, "trial": 0}, "Assis Pro": {"total": 45, "voluntary": 4, "involuntary": 41, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Enterprise": {"total": 1, "voluntary": 0, "involuntary": 1, "trial": 0}}, "churn_mtd": 127, "churn_mtd_rate": 17.5414364640884, "churn_mtd_voluntary": 56, "churn_mtd_involuntary": 71, "churn_mtd_by_product": {"Bot IA": {"total": 42, "voluntary": 34, "involuntary": 8, "trial": 0}, "Assis Pro": {"total": 82, "voluntary": 21, "involuntary": 61, "trial": 0}, "Assis Enterprise": {"total": 2, "voluntary": 0, "involuntary": 2, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}}, "total_mrr": 65096.90000000003, "active_subs": 724, "subs_by_product": {"Bot IA": 211, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Pro": 504, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "new_subs_by_product": {"Bot IA": {"count": 1, "mrr": 349.0}}, "churn_by_product": {"Bot IA": {"total": 3, "voluntary": 1, "involuntary": 2, "trial": 0}, "Assis Pro": {"total": 4, "voluntary": 0, "involuntary": 4, "trial": 0}}, "churn_rate_by_product": {"Bot IA": 1.4218009478672986, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Pro": 0.7936507936507936, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "top_segments": {"Imobiliário": 6, "Corretor de Seguros": 3, "Decorações de festa": 3, "Elétrica": 1, "Venda de produtos caipira": 1}, "campaigns": [{"name": "Qualified Lead", "key": "120241791576860374", "leads": 33, "mql": 13, "pagantes": 0, "spend": 69}, {"name": "Obj Leads Chat Bot IA", "key": "ObjLeads_ChatBotIA_ca120240970930170374", "leads": 22, "mql": 6, "pagantes": 0, "spend": 87.99}, {"name": "Salesled Growth Obj Leads Chat Bot IA", "key": "120242459559360374", "leads": 10, "mql": 6, "pagantes": 0, "spend": 61.85}, {"name": "(sem campanha)", "key": "(sem campanha)", "leads": 7, "mql": 4, "pagantes": 0, "spend": 0.0}, {"name": "Instagram bio", "key": "Instagram_bio", "leads": 2, "mql": 0, "pagantes": 0, "spend": 0.0}], "date": "2026-03-13", "saved_at": "2026-03-13T09:40:28.936277"}};
+const CURRENT = {"ai": {"changes": [], "top_action": ""}, "stripe_live": {"new_subs": 13, "new_mrr": 1121.0, "new_subs_by_product": {"Bot IA": {"count": 12, "mrr": 1042.0}, "Assis Pro": {"count": 1, "mrr": 79.0}}, "revenue": 2704.0, "invoices": 31, "churned": 16, "churn_voluntary": 7, "churn_involuntary": 9, "churn_trial": 0, "churn_by_product": {"Bot IA": {"total": 11, "voluntary": 6, "involuntary": 5, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Pro": {"total": 4, "voluntary": 0, "involuntary": 4, "trial": 0}}, "total_mrr": 64977.90000000003, "active_subs": 726, "subs_by_product": {"Bot IA": 212, "Assis Pro": 505, "Assis Pro - Live": 1, "Assis Pro - Anual": 1, "Assis Enterprise": 2, "Assis Empresas (com desconto)": 5}, "churn_rate_by_product": {"Bot IA": 5.188679245283019, "Assis Pro": 0.7920792079207921, "Assis Pro - Live": 0.0, "Assis Pro - Anual": 0.0, "Assis Enterprise": 0.0, "Assis Empresas (com desconto)": 0.0}, "churn_rate": 2.203856749311295, "churn_wtd": 62, "churn_wtd_voluntary": 18, "churn_wtd_involuntary": 44, "churn_wtd_rate": 8.539944903581267, "churn_wtd_by_product": {"Bot IA": {"total": 19, "voluntary": 13, "involuntary": 6, "trial": 0}, "Assis Pro": {"total": 41, "voluntary": 4, "involuntary": 37, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}, "Assis Enterprise": {"total": 1, "voluntary": 0, "involuntary": 1, "trial": 0}}, "churn_mtd": 120, "churn_mtd_voluntary": 55, "churn_mtd_involuntary": 65, "churn_mtd_rate": 16.528925619834713, "churn_mtd_by_product": {"Bot IA": {"total": 39, "voluntary": 33, "involuntary": 6, "trial": 0}, "Assis Pro": {"total": 78, "voluntary": 21, "involuntary": 57, "trial": 0}, "Assis Enterprise": {"total": 2, "voluntary": 0, "involuntary": 2, "trial": 0}, "Assis Analytics": {"total": 1, "voluntary": 1, "involuntary": 0, "trial": 0}}, "churn_wtd_days": 4, "churn_mtd_days": 12, "new_subs_wtd": 36, "new_subs_mtd": 64, "pending_cancellations": 6, "pending_by_product": {"Assis Pro": 5, "Bot IA": 1}}, "campaigns": [{"name": "Qualified Lead", "leads": 475, "mql": 136, "pagantes": 4, "spend": 4851.54}, {"name": "Obj Leads Chat Bot IA", "leads": 332, "mql": 100, "pagantes": 4, "spend": 4877.62}, {"name": "(sem campanha)", "leads": 80, "mql": 30, "pagantes": 10, "spend": 0.0}, {"name": "Instagram bio", "leads": 47, "mql": 13, "pagantes": 1, "spend": 0.0}, {"name": "Salesled Growth Obj Leads Chat Bot IA", "leads": 37, "mql": 21, "pagantes": 0, "spend": 676.16}, {"name": "23233480441", "leads": 26, "mql": 12, "pagantes": 1, "spend": 0}, {"name": "(template erro)", "leads": 5, "mql": 2, "pagantes": 0, "spend": 0.0}, {"name": "ai bot early access", "leads": 3, "mql": 3, "pagantes": 1, "spend": 0.0}, {"name": "(template erro)", "leads": 2, "mql": 1, "pagantes": 0, "spend": 0.0}, {"name": "Tiktok bio", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "Update de Produto - 18/02", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}, {"name": "gabarito das ias", "leads": 1, "mql": 0, "pagantes": 0, "spend": 0.0}], "segments": {"Imobiliário": {"total": 13, "mql": 3}, "Iptv": {"total": 3, "mql": 2}, "(sem segmento)": {"total": 40, "mql": 0}, "Pessoas": {"total": 1, "mql": 0}, "Prestação de serviços": {"total": 1, "mql": 0}, "Vendas": {"total": 1, "mql": 1}, "Veículos, Créditos, Consórcios": {"total": 6, "mql": 3}, "Cursos e pós graduação": {"total": 1, "mql": 1}, "Deysyanne": {"total": 1, "mql": 0}, "Beleza": {"total": 1, "mql": 0}, "Ocupado": {"total": 1, "mql": 1}, "Corretor de Seguros": {"total": 8, "mql": 5}, "Alma": {"total": 1, "mql": 0}, "Tecnologia": {"total": 2, "mql": 2}, "Floricultura": {"total": 1, "mql": 1}, "Loronha": {"total": 1, "mql": 1}, "Corretor de móveis": {"total": 1, "mql": 0}, "Faxina": {"total": 1, "mql": 1}, "Agência de viagem": {"total": 1, "mql": 0}, "Vendedor": {"total": 1, "mql": 0}, "Segurança eletrônica": {"total": 1, "mql": 0}, "Religioso": {"total": 1, "mql": 0}, "Moveis  planejados": {"total": 1, "mql": 0}, "Academia": {"total": 3, "mql": 1}, "Moda íntima": {"total": 1, "mql": 0}, "Cursos Livres": {"total": 1, "mql": 0}, "festas": {"total": 1, "mql": 0}, "Nenhum": {"total": 1, "mql": 0}, "eletricista": {"total": 1, "mql": 1}, "Vendas de roupas e vestidos evangélicos": {"total": 1, "mql": 1}, "MENTORIA": {"total": 1, "mql": 0}, "Escola de": {"total": 1, "mql": 1}, "Tele": {"total": 1, "mql": 1}, "Empreendimento": {"total": 1, "mql": 1}, "Terapia": {"total": 2, "mql": 1}, "Lanchonete": {"total": 1, "mql": 0}, "Confeiteira": {"total": 1, "mql": 1}, "Salao": {"total": 1, "mql": 0}, "Medicina e segurança do trabalho": {"total": 1, "mql": 0}, "3071991@": {"total": 1, "mql": 1}, "Embalagens": {"total": 1, "mql": 1}, "Revenda de gás": {"total": 1, "mql": 0}, "Ainda não é": {"total": 1, "mql": 0}, "Bar": {"total": 1, "mql": 1}, "Informática": {"total": 1, "mql": 0}, "Modas masculina é feminina": {"total": 1, "mql": 0}, "Piscinas Splash": {"total": 1, "mql": 1}, "Fotografia e eventos": {"total": 1, "mql": 1}, "Eventos": {"total": 1, "mql": 0}, "Olá tudo bem": {"total": 1, "mql": 1}, "Eletricista": {"total": 1, "mql": 0}, "Colchões": {"total": 1, "mql": 1}, "Móveis": {"total": 1, "mql": 1}, "Dentista": {"total": 1, "mql": 0}, "vendas": {"total": 1, "mql": 1}, "Estética": {"total": 1, "mql": 0}, "Vitor7": {"total": 1, "mql": 1}, "Aluguel de roupas": {"total": 1, "mql": 1}, "Hamburguer": {"total": 1, "mql": 1}, "Textil": {"total": 1, "mql": 1}}};
+const INITIAL_DATE = "2026-03-12";
+const WEEKLY_GOAL = 35;
+const MONTHLY_GOAL = 140;
+
+// ─── State ───
+const state = { period: 'dia', date: INITIAL_DATE, compare: false, campaign: 'all' };
+const sortedDates = Object.keys(DAYS).sort();
+
+// Build campaign list from all snapshots — use key (utm_campaign) for filtering, name for display
+const allCampaigns = new Map(); // key -> display name
+for(const d of Object.values(DAYS)) {
+  for(const c of (d.campaigns||[])) {
+    const key = c.key || c.name; // fallback for old snapshots without key
+    if(!allCampaigns.has(key)) allCampaigns.set(key, c.name);
+  }
+}
+const campaignSelect = document.getElementById('campaign-filter');
+for(const [key, display] of [...allCampaigns.entries()].sort((a,b) => a[1].localeCompare(b[1]))) {
+  const opt = document.createElement('option');
+  opt.value = key;
+  opt.textContent = display.length>28 ? display.slice(0,25)+'...' : display;
+  campaignSelect.appendChild(opt);
+}
+
+// ─── Helpers ───
+function fm(v) {
+  if(!v || v===0) return 'R$0';
+  return 'R$'+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
+function fp(v) { return (v||0).toFixed(1)+'%'; }
+function num(v) { return (v||0).toLocaleString('pt-BR'); }
+
+function delta(cur,prev) {
+  if(!prev) return ['—','neutral'];
+  const pct=((cur-prev)/prev)*100;
+  if(Math.abs(pct)<1) return ['=','neutral'];
+  const txt=(pct>0?'+':'')+pct.toFixed(0)+'%';
+  return [txt, pct>0?'positive':'negative'];
+}
+function deltaInv(cur,prev) {
+  const [t,c]=delta(cur,prev);
+  if(c==='positive') return [t,'negative'];
+  if(c==='negative') return [t,'positive'];
+  return [t,c];
+}
+
+function parseDate(s) { const p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function fmtDate(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDateBR(d) { return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+
+const WEEKDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sab'];
+function fmtDayShort(d) { return WEEKDAYS[d.getDay()]+' '+String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
+
+// ─── Period logic ───
+function getWeekStart(d) { const dt=new Date(d); const day=dt.getDay(); const diff=dt.getDate()-day+(day===0?-6:1); dt.setDate(diff); return dt; }
+function getMonthStart(d) { return new Date(d.getFullYear(),d.getMonth(),1); }
+function getMonthEnd(d) { return new Date(d.getFullYear(),d.getMonth()+1,0); }
+
+function getPeriodDates(period, dateStr) {
+  const d = parseDate(dateStr);
+  if(period==='dia') return [dateStr];
+  if(period==='semana') {
+    const ws = getWeekStart(d);
+    const dates = [];
+    for(let i=0;i<7;i++) {
+      const dd=new Date(ws); dd.setDate(ws.getDate()+i);
+      const key=fmtDate(dd);
+      if(DAYS[key]) dates.push(key);
+    }
+    return dates;
+  }
+  if(period==='mes') {
+    const ms=getMonthStart(d), me=getMonthEnd(d);
+    const dates=[];
+    for(let dd=new Date(ms); dd<=me; dd.setDate(dd.getDate()+1)) {
+      const key=fmtDate(dd);
+      if(DAYS[key]) dates.push(key);
+    }
+    return dates;
+  }
+  return [dateStr];
+}
+
+function getPrevPeriodDates(period, dateStr) {
+  const d = parseDate(dateStr);
+  if(period==='dia') {
+    const pd=new Date(d); pd.setDate(pd.getDate()-7); // same weekday last week
+    return [fmtDate(pd)];
+  }
+  if(period==='semana') {
+    const ws=getWeekStart(d);
+    const pws=new Date(ws); pws.setDate(pws.getDate()-7);
+    const dates=[];
+    for(let i=0;i<7;i++) {
+      const dd=new Date(pws); dd.setDate(pws.getDate()+i);
+      const key=fmtDate(dd);
+      if(DAYS[key]) dates.push(key);
+    }
+    return dates;
+  }
+  if(period==='mes') {
+    const pm=new Date(d.getFullYear(),d.getMonth()-1,1);
+    const pme=new Date(d.getFullYear(),d.getMonth(),0);
+    const dates=[];
+    for(let dd=new Date(pm); dd<=pme; dd.setDate(dd.getDate()+1)) {
+      const key=fmtDate(dd);
+      if(DAYS[key]) dates.push(key);
+    }
+    return dates;
+  }
+  return [];
+}
+
+function aggregate(dates, campaignFilter) {
+  if(!dates.length) return null;
+  const filterCampaign = campaignFilter && campaignFilter !== 'all';
+  const r = {
+    days:0, visitors:0, leads:0, mql:0, pagantes:0, spend:0, impressions:0, clicks:0,
+    new_subs:0, new_mrr:0, revenue:0, churned:0, churn_vol:0, churn_inv:0,
+    total_mrr:0, active_subs:0, subs_by_product:{}, churn_by_product:{},
+    new_subs_by_product:{}, pending:0, pending_by_product:{}, segments:{},
+    campaigns_agg:{}
+  };
+  let last = null;
+  for(const dt of dates.sort()) {
+    const d = DAYS[dt];
+    if(!d) continue;
+    r.days++;
+
+    if(filterCampaign) {
+      const camp = (d.campaigns||[]).find(c => (c.key||c.name) === campaignFilter);
+      if(camp) {
+        r.leads += camp.leads||0;
+        r.mql += camp.mql||0;
+        r.pagantes += camp.pagantes||0;
+        r.spend += camp.spend||0;
+      }
+      r.visitors += d.visitors||0;
+    } else {
+      r.visitors += d.visitors||0;
+      r.leads += d.leads||0;
+      r.mql += d.mql||0;
+      r.pagantes += d.pagantes||0;
+      r.spend += d.spend||0;
+    }
+
+    r.impressions += d.impressions||0;
+    r.clicks += d.clicks||0;
+    const s = d.stripe||{};
+    // Stripe metrics are global (not attributable to campaigns)
+    if(!filterCampaign) {
+      r.new_subs += s.new_subs||0;
+      r.new_mrr += s.new_mrr||0;
+      r.revenue += s.revenue||0;
+      r.churned += s.churned||0;
+      r.churn_vol += s.churn_voluntary||0;
+      r.churn_inv += s.churn_involuntary||0;
+    }
+    last = d;
+
+    // Aggregate churn per product across days (only when not filtering campaigns)
+    if(!filterCampaign) {
+      const dayChurn = s.churn_by_product||{};
+      for(const [prod, ch] of Object.entries(dayChurn)) {
+        if(!r.churn_by_product[prod]) r.churn_by_product[prod] = {total:0,voluntary:0,involuntary:0};
+        r.churn_by_product[prod].total += ch.total||0;
+        r.churn_by_product[prod].voluntary += ch.voluntary||0;
+        r.churn_by_product[prod].involuntary += ch.involuntary||0;
+      }
+      const dayNew = s.new_subs_by_product||{};
+      for(const [prod, np] of Object.entries(dayNew)) {
+        if(!r.new_subs_by_product[prod]) r.new_subs_by_product[prod] = {count:0};
+        const c = typeof np === 'object' ? (np.count||0) : 0;
+        r.new_subs_by_product[prod].count += c;
+      }
+    }
+
+    // Merge segments
+    const segs = d.top_segments || {};
+    for(const[k,v] of Object.entries(segs)) r.segments[k] = (r.segments[k]||0)+v;
+    // Aggregate campaigns across days (keyed by utm_campaign)
+    for(const c of (d.campaigns||[])) {
+      const ck = c.key||c.name;
+      if(!r.campaigns_agg[ck]) r.campaigns_agg[ck] = {display:c.name, leads:0,mql:0,pagantes:0,spend:0};
+      r.campaigns_agg[ck].leads += c.leads||0;
+      r.campaigns_agg[ck].mql += c.mql||0;
+      r.campaigns_agg[ck].pagantes += c.pagantes||0;
+      r.campaigns_agg[ck].spend += c.spend||0;
+    }
+  }
+  if(last) {
+    const s = last.stripe||{};
+    r.total_mrr = s.total_mrr||0;
+    r.active_subs = s.active_subs||0;
+    r.subs_by_product = s.subs_by_product||{};
+    r.pending = s.pending_cancellations||0;
+    r.pending_by_product = s.pending_by_product||{};
+  }
+  // No matching data found
+  if(r.days === 0) return null;
+  // Computed
+  r.cpl = r.leads>0 ? r.spend/r.leads : 0;
+  r.cac = r.pagantes>0 ? r.spend/r.pagantes : 0;
+  r.cac_real = r.new_subs>0 ? r.spend/r.new_subs : 0;
+  r.taxa_lead = r.visitors>0 ? r.leads/r.visitors*100 : 0;
+  r.taxa_mql = r.leads>0 ? r.mql/r.leads*100 : 0;
+  r.taxa_conv = r.mql>0 ? (r.new_subs||r.pagantes)/r.mql*100 : 0;
+  r.lead_pago = r.leads>0 ? (r.new_subs||r.pagantes)/r.leads*100 : 0;
+  r.ticket = r.new_subs>0 ? r.new_mrr/r.new_subs : 0;
+  r.churn_rate = r.active_subs>0 ? r.churned/r.active_subs*100 : 0;
+  r.churn_total = r.churned + r.pending;
+  r.churn_total_rate = r.active_subs>0 ? r.churn_total/r.active_subs*100 : 0;
+  return r;
+}
+
+function navigate(dir) {
+  if(state.period==='dia') {
+    // Snap to next/prev available date
+    const idx = sortedDates.indexOf(state.date);
+    if(dir>0 && idx<sortedDates.length-1) state.date = sortedDates[idx+1];
+    else if(dir<0 && idx>0) state.date = sortedDates[idx-1];
+    else if(idx===-1) {
+      // Current date not in data — find nearest
+      const nearest = dir>0
+        ? sortedDates.find(d => d > state.date)
+        : [...sortedDates].reverse().find(d => d < state.date);
+      if(nearest) state.date = nearest;
+    }
+  } else if(state.period==='semana') {
+    const d = parseDate(state.date);
+    d.setDate(d.getDate()+(dir*7));
+    state.date = fmtDate(d);
+  } else {
+    const d = parseDate(state.date);
+    d.setMonth(d.getMonth()+dir);
+    state.date = fmtDate(d);
+  }
+  renderAll();
+}
+
+function getDateLabel() {
+  const d = parseDate(state.date);
+  if(state.period==='dia') return fmtDayShort(d)+' '+d.getFullYear();
+  if(state.period==='semana') {
+    const ws=getWeekStart(d);
+    const we=new Date(ws); we.setDate(we.getDate()+6);
+    return fmtDateBR(ws)+' - '+fmtDateBR(we);
+  }
+  const months=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return months[d.getMonth()]+' '+d.getFullYear();
+}
+
+// ─── Render Functions ───
+
+function renderHero(data, comp) {
+  document.getElementById('hero-date').textContent = getDateLabel();
+
+  // Goal (period-aware)
+  const sales = data.new_subs||data.pagantes||0;
+  const days = data.days||1;
+  const isMonth = state.period === 'mes';
+  const goal = isMonth ? MONTHLY_GOAL : WEEKLY_GOAL;
+  const goalLabel = isMonth ? 'Meta do mês' : 'Meta da semana';
+  const pct = Math.min(sales/goal*100,100);
+  const pace = isMonth ? (sales/days*30).toFixed(0) : (sales/days*7).toFixed(1);
+  const paceLabel = isMonth ? `${pace} vendas/mês (${days}d contados)` : `${pace} vendas/semana (${days}d contados)`;
+  document.getElementById('goal-section').innerHTML = `
+    <div class="goal-section">
+      <div class="goal-label">${goalLabel}</div>
+      <div class="goal-row">
+        <div class="goal-text"><span class="accent">${sales}</span>/${goal} vendas</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct.toFixed(0)}%"></div></div>
+      </div>
+      <div class="goal-pace">PACE: ${paceLabel}</div>
+    </div>`;
+
+  // KPI pills
+  const pills = [
+    ['CAC Real', fm(data.cac_real)],
+    ['Lead &rarr; Pago', fp(data.lead_pago)],
+    ['Investido', fm(data.spend)],
+    ['Leads', num(data.leads)],
+    ['Visitantes', num(data.visitors)],
+  ];
+  document.getElementById('kpi-pills').innerHTML = '<div class="kpi-pills">'+pills.map(([l,v])=>
+    `<div class="kpi-pill"><div class="kpi-pill-label">${l}</div><div class="kpi-pill-value">${v}</div></div>`
+  ).join('')+'</div>';
+}
+
+function badge(cur,prev,inv) {
+  if(!prev) return '';
+  const [t,c] = inv ? deltaInv(cur,prev) : delta(cur,prev);
+  return `<span class="comp-badge ${c}">${t}</span>`;
+}
+
+function renderCards(data, comp) {
+  let cards = '';
+
+  // Card 1: Leads
+  if(comp) {
+    const [dt,dc] = delta(data.leads, comp.leads);
+    const border = dc==='positive'?'green':dc==='negative'?'red':'accent';
+    cards += `<div class="highlight-card ${border}">
+      <div class="card-label">Leads vs Per&iacute;odo Anterior</div>
+      <div class="card-value ${dc}">${dt}</div>
+      <div class="card-detail">${data.leads} atual vs ${comp.leads} anterior</div></div>`;
+  } else {
+    cards += `<div class="highlight-card accent">
+      <div class="card-label">Leads</div>
+      <div class="card-value">${num(data.leads)}</div>
+      <div class="card-detail">${data.mql} MQL (${fp(data.taxa_mql)})</div></div>`;
+  }
+
+  // Card 2: Churn (hide when filtering by campaign — not attributable)
+  if(state.campaign === 'all') {
+    const border2 = data.churn_total_rate>5?'red':data.churn_total_rate>2?'orange':'green';
+    const pendLabel = data.pending>0 ? ` + ${data.pending} agendado` : '';
+    cards += `<div class="highlight-card ${border2}">
+      <div class="card-label">Churn (${data.days}d)</div>
+      <div class="card-value">${data.churn_total} <span style="font-size:.9rem;color:var(--text-light)">(${fp(data.churn_total_rate)})</span></div>
+      <div class="card-detail">${data.churned} efetivo (${data.churn_vol} vol, ${data.churn_inv} pgto)${pendLabel}</div></div>`;
+
+    // Card 3: MRR
+    cards += `<div class="highlight-card accent">
+      <div class="card-label">MRR Total</div>
+      <div class="card-value">${fm(data.total_mrr)}</div>
+      <div class="card-detail">${data.active_subs} subs ativas &middot; +${fm(data.new_mrr)} novo MRR</div></div>`;
+  } else {
+    // Campaign-specific card: Spend + CAC
+    cards += `<div class="highlight-card accent">
+      <div class="card-label">Investimento</div>
+      <div class="card-value">${fm(data.spend)}</div>
+      <div class="card-detail">CPL ${fm(data.cpl)} &middot; CAC ${fm(data.cac)}</div></div>`;
+  }
+
+  document.getElementById('cards-section').innerHTML =
+    `<div class="section"><div class="container"><div class="cards-row">${cards}</div></div></div>`;
+}
+
+function renderAI() {
+  const ai = CURRENT.ai;
+  if(!ai || !ai.changes || !ai.changes.length) { document.getElementById('ai-section').innerHTML=''; return; }
+  const changes = ai.changes.slice(0,3).map(c=>`<li>${c}</li>`).join('');
+  const action = ai.top_action ? `<div class="ai-action">\uD83C\uDFAF ${ai.top_action}</div>` : '';
+  document.getElementById('ai-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDD25 Analise AI</div>
+      <div class="ai-box"><ul style="margin:0;padding-left:20px;line-height:1.8">${changes}</ul>${action}</div>
+    </div></div>`;
+}
+
+function renderFunnel(data, comp) {
+  const vendas = data.new_subs||data.pagantes;
+  const arrow = (rate, compRate) => {
+    let b = '';
+    if(comp && compRate!==undefined) b = badge(rate, compRate, false);
+    return `<div class="funnel-arrow">
+      <div class="funnel-arrow-line">&rarr;</div>
+      <div class="funnel-arrow-rate">${fp(rate)}</div></div>`;
+  };
+
+  const step = (label, val, compVal) => {
+    let b = comp && compVal!==undefined ? badge(val, compVal, false) : '';
+    return `<div class="funnel-step">
+      <div class="funnel-step-label">${label}</div>
+      <div class="funnel-step-value">${num(val)}${b}</div></div>`;
+  };
+
+  const cv = comp ? (comp.new_subs||comp.pagantes) : undefined;
+  document.getElementById('funnel-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDCCA Funil</div>
+      <div class="funnel">
+        ${step('Visitantes', data.visitors, comp?.visitors)}
+        ${arrow(data.taxa_lead)}
+        ${step('Leads', data.leads, comp?.leads)}
+        ${arrow(data.taxa_mql)}
+        ${step('MQL', data.mql, comp?.mql)}
+        ${arrow(data.taxa_conv)}
+        ${step('Vendas', vendas, cv)}
+      </div>
+    </div></div>`;
+}
+
+function renderCharts(dates) {
+  if(dates.length < 2) { document.getElementById('charts-section').innerHTML=''; return; }
+  const sorted = dates.filter(d=>DAYS[d]).sort();
+  if(sorted.length < 2) { document.getElementById('charts-section').innerHTML=''; return; }
+
+  function sparkline(values, color, fillColor) {
+    const W=320, H=100, padY=8, padX=2;
+    const max = Math.max(...values, 1);
+    const min = Math.min(...values, 0);
+    const range = max - min || 1;
+    const pts = values.map((v,i) => {
+      const x = padX + (i/(values.length-1))*(W-2*padX);
+      const y = padY + (1 - (v-min)/range)*(H-2*padY);
+      return [x.toFixed(1),y.toFixed(1)];
+    });
+    const line = pts.map(([x,y],i) => (i===0?'M':'L')+x+','+y).join(' ');
+    const area = line + ` L${W-padX},${H} L${padX},${H} Z`;
+    // Dots for first, last, and max
+    const maxIdx = values.indexOf(Math.max(...values));
+    const dots = [0, values.length-1, maxIdx].map(i =>
+      `<circle cx="${pts[i][0]}" cy="${pts[i][1]}" r="3" fill="${color}" />`
+    ).join('');
+    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs><linearGradient id="g_${color.replace('#','')}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${fillColor}" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="${fillColor}" stop-opacity="0.02"/>
+      </linearGradient></defs>
+      <path d="${area}" fill="url(#g_${color.replace('#','')})" />
+      <path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${dots}
+    </svg>`;
+  }
+
+  function chartCard(title, values, total, color, fillColor, suffix) {
+    const svg = sparkline(values, color, fillColor);
+    const labels = sorted.map(d => d.slice(8));
+    const first = labels[0];
+    const last = labels[labels.length-1];
+    const mid = labels.length>4 ? labels[Math.floor(labels.length/2)] : '';
+    // Trend calc
+    const half = Math.floor(values.length/2);
+    const firstHalf = values.slice(0,half).reduce((a,b)=>a+b,0)/(half||1);
+    const secondHalf = values.slice(half).reduce((a,b)=>a+b,0)/((values.length-half)||1);
+    const trend = firstHalf>0 ? ((secondHalf-firstHalf)/firstHalf*100) : 0;
+    const trendStr = trend>=0 ? `<span class="positive">\u25B2 ${Math.abs(trend).toFixed(0)}%</span>` : `<span class="negative">\u25BC ${Math.abs(trend).toFixed(0)}%</span>`;
+
+    return `<div class="chart-card">
+      <div class="chart-card-title">${title}</div>
+      <div class="chart-card-value">${typeof total==='string'?total:num(total)} <span class="sub">${suffix||''} ${trendStr}</span></div>
+      ${svg}
+      <div class="chart-labels"><span>${first}</span>${mid?'<span>'+mid+'</span>':''}<span>${last}</span></div>
+    </div>`;
+  }
+
+  const leads = sorted.map(d => DAYS[d].leads);
+  const mql = sorted.map(d => DAYS[d].mql);
+  const vendas = sorted.map(d => (DAYS[d].stripe?.new_subs||DAYS[d].pagantes||0));
+  const visitors = sorted.map(d => DAYS[d].visitors);
+  const churn = sorted.map(d => (DAYS[d].stripe?.churned||0));
+  const spend = sorted.map(d => DAYS[d].spend);
+  const cpl = sorted.map(d => DAYS[d].leads>0 ? DAYS[d].spend/DAYS[d].leads : 0);
+  const convRate = sorted.map(d => DAYS[d].mql>0 ? (DAYS[d].stripe?.new_subs||DAYS[d].pagantes||0)/DAYS[d].mql*100 : 0);
+
+  const tLeads = leads.reduce((a,b)=>a+b,0);
+  const tMql = mql.reduce((a,b)=>a+b,0);
+  const tVendas = vendas.reduce((a,b)=>a+b,0);
+  const tVis = visitors.reduce((a,b)=>a+b,0);
+  const tChurn = churn.reduce((a,b)=>a+b,0);
+  const tSpend = spend.reduce((a,b)=>a+b,0);
+  const avgCpl = tLeads>0 ? tSpend/tLeads : 0;
+  const avgConv = tMql>0 ? tVendas/tMql*100 : 0;
+
+  document.getElementById('charts-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDCC8 Tend\u00eancias</div>
+      <div class="charts-grid">
+        ${chartCard('Visitantes', visitors, tVis, '#6C63FF', '#6C63FF', 'total')}
+        ${chartCard('Leads', leads, tLeads, '#E8725C', '#E8725C', 'total')}
+        ${chartCard('MQL', mql, tMql, '#F39C12', '#F39C12', 'total')}
+        ${chartCard('Vendas', vendas, tVendas, '#27AE60', '#27AE60', 'total')}
+        ${chartCard('Churn', churn, tChurn, '#E74C3C', '#E74C3C', 'total')}
+        ${chartCard('CPL', cpl, fm(avgCpl), '#9B59B6', '#9B59B6', 'm\u00e9dia')}
+        ${chartCard('Investimento', spend, fm(tSpend), '#3498DB', '#3498DB', 'total')}
+        ${chartCard('Conv. MQL\u2192Venda', convRate, fp(avgConv), '#1ABC9C', '#1ABC9C', 'm\u00e9dia')}
+      </div>
+    </div></div>`;
+}
+
+function renderTable(dates) {
+  if(dates.length<1) { document.getElementById('table-section').innerHTML=''; return; }
+  let rows = '';
+  for(const dt of dates.sort()) {
+    const d = DAYS[dt];
+    if(!d) continue;
+    const dd = parseDate(dt);
+    const s = d.stripe||{};
+    const vendas = s.new_subs||d.pagantes||0;
+    rows += `<tr>
+      <td class="bold">${fmtDayShort(dd)}</td>
+      <td class="num">${d.visitors||0}</td>
+      <td class="num">${d.leads||0}</td>
+      <td class="num">${d.mql||0}</td>
+      <td class="num bold">${vendas}</td>
+      <td class="num">${fm(d.spend||0)}</td>
+      <td class="num">${fm(d.cpl||0)}</td>
+      <td class="num">${s.churned||0}</td>
+    </tr>`;
+  }
+  document.getElementById('table-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDCC5 Dia a Dia</div>
+      <table class="data-table"><thead><tr>
+        <th>Dia</th><th class="num">Visit</th><th class="num">Leads</th><th class="num">MQL</th>
+        <th class="num">Vendas</th><th class="num">Spend</th><th class="num">CPL</th><th class="num">Churn</th>
+      </tr></thead><tbody>${rows}</tbody></table>
+    </div></div>`;
+}
+
+function renderPeriodMetrics(data, comp) {
+  function card(label, d) {
+    const vendas = d.new_subs||d.pagantes;
+    const rows = [
+      ['Visitantes', num(d.visitors)],
+      ['Leads', num(d.leads)],
+      ['MQL', num(d.mql)],
+      ['Vendas', num(vendas)],
+      ['Investimento', fm(d.spend)],
+      ['CPL', fm(d.cpl)],
+      ['CAC', fm(d.cac)],
+      ['Lead &rarr; Pago', fp(d.lead_pago)],
+    ];
+    return `<div class="metric-card">
+      <div class="metric-card-title">${label} (${d.days}d)</div>
+      ${rows.map(([l,v])=>`<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value">${v}</span></div>`).join('')}
+    </div>`;
+  }
+
+  let html = card('Atual', data);
+  if(comp) html += card('Anterior', comp);
+
+  document.getElementById('period-metrics').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDCCA Acumulado</div>
+      <div class="metrics-grid">${html}</div>
+    </div></div>`;
+}
+
+function renderStripe(data) {
+  // Hide Stripe when filtering by campaign (not attributable)
+  if(state.campaign !== 'all') { document.getElementById('stripe-section').innerHTML=''; return; }
+  const subs = data.subs_by_product||{};
+  const hasData = Object.keys(subs).length || Object.keys(data.churn_by_product||{}).length || Object.keys(data.new_subs_by_product||{}).length;
+  if(!hasData) { document.getElementById('stripe-section').innerHTML=''; return; }
+  const churn = data.churn_by_product||{};
+  const newByProd = data.new_subs_by_product||{};
+  const pendingByProd = data.pending_by_product||{};
+
+  // Merge all known products: active subs + any with churn/new during period
+  const allProds = new Set([...Object.keys(subs), ...Object.keys(churn), ...Object.keys(newByProd)]);
+  const prodList = [...allProds].sort((a,b) => (subs[b]||0) - (subs[a]||0));
+
+  let rows = '';
+  let sumChT=0, sumChV=0, sumChI=0, sumNew=0, sumPend=0, totActive=0;
+  for(const prod of prodList) {
+    const active = subs[prod]||0;
+    totActive += active;
+    const ch = churn[prod]||{};
+    const chT = ch.total||0;
+    const chV = ch.voluntary||0;
+    const chI = ch.involuntary||0;
+    sumChT+=chT; sumChV+=chV; sumChI+=chI;
+    const np = newByProd[prod]||{};
+    const newCount = typeof np === 'object' ? (np.count||0) : 0;
+    sumNew+=newCount;
+    const pend = pendingByProd[prod]||0;
+    sumPend+=pend;
+    // Churn total = efetivado + agendado
+    const churnTotal = chT + pend;
+    const chRate = active>0 ? (churnTotal/active*100).toFixed(1) : '0.0';
+
+    rows += `<tr>
+      <td class="bold">${prod}</td>
+      <td class="num">${active}</td>
+      <td class="num" style="color:var(--positive)">+${newCount}</td>
+      <td class="num">
+        <span style="color:var(--negative)">-${chT}</span>
+        <span style="font-size:.75rem;color:var(--text-light);display:block">${chV} vol · ${chI} pgto</span>
+      </td>
+      <td class="num">${pend>0?'<span style="color:var(--warning)">\uD83D\uDD14 '+pend+'</span>':'—'}</td>
+      <td class="num"><span style="color:var(--negative);font-weight:700">-${churnTotal}</span>
+        <span style="font-size:.75rem;color:var(--text-light);display:block">${chRate}%</span></td>
+    </tr>`;
+  }
+  const totalChurnAll = sumChT + sumPend;
+  const totRate = totActive>0 ? (totalChurnAll/totActive*100).toFixed(1) : '0.0';
+  rows += `<tr style="background:#F8F8F8;font-weight:700">
+    <td>TOTAL</td>
+    <td class="num">${totActive}</td>
+    <td class="num" style="color:var(--positive)">+${sumNew}</td>
+    <td class="num"><span style="color:var(--negative)">-${sumChT}</span>
+      <span style="font-size:.75rem;color:var(--text-light);display:block">${sumChV} vol · ${sumChI} pgto</span></td>
+    <td class="num">${sumPend>0?'<span style="color:var(--warning)">\uD83D\uDD14 '+sumPend+'</span>':'—'}</td>
+    <td class="num"><span style="color:var(--negative);font-weight:700">-${totalChurnAll}</span>
+      <span style="font-size:.75rem;color:var(--text-light);display:block">${totRate}%</span></td>
+  </tr>`;
+
+  document.getElementById('stripe-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDCB3 Stripe — Por Produto</div>
+      <table class="data-table"><thead><tr>
+        <th>Produto</th><th class="num">Ativas</th><th class="num">Novas</th>
+        <th class="num">Churn</th><th class="num">Agendado</th><th class="num">Total</th>
+      </tr></thead><tbody>${rows}</tbody></table>
+    </div></div>`;
+}
+
+function renderSegments(data) {
+  const segs = data.segments;
+  if(!segs || !Object.keys(segs).length) { document.getElementById('segments-section').innerHTML=''; return; }
+  const sorted = Object.entries(segs).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max = sorted[0]?.[1]||1;
+  const bars = sorted.map(([name,mql])=> {
+    const pct = (mql/max*100).toFixed(0);
+    return `<div class="seg-bar-wrap">
+      <div class="seg-bar-label"><span>${name}</span><span><b>${mql}</b> MQL</span></div>
+      <div class="seg-bar"><div class="seg-bar-fill" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+
+  document.getElementById('segments-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83C\uDFF7\uFE0F Top Segmentos</div>
+      ${bars}
+    </div></div>`;
+}
+
+function renderEconomics(data, comp) {
+  function row(label, val, compVal, inv) {
+    let b = '';
+    if(comp && compVal) b = badge(val, compVal, inv);
+    return `<div class="metric-row"><span class="metric-label">${label}</span><span class="metric-value">${fm(val)}${b}</span></div>`;
+  }
+  function rowPct(label, val, compVal) {
+    let b = '';
+    if(comp && compVal) b = badge(val, compVal, false);
+    return `<div class="metric-row"><span class="metric-label">${label}</span><span class="metric-value">${fp(val)}${b}</span></div>`;
+  }
+
+  const html = [
+    row('CPL', data.cpl, comp?.cpl, true),
+    row('CAC', data.cac, comp?.cac, true),
+    row('Ticket Medio', data.ticket, comp?.ticket, false),
+    row('Investimento', data.spend, comp?.spend, false),
+    rowPct('Lead &rarr; Pago', data.lead_pago, comp?.lead_pago),
+  ].join('');
+
+  document.getElementById('economics-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83D\uDCB0 Unit Economics</div>
+      <div class="metric-card">${html}</div>
+    </div></div>`;
+}
+
+// ─── Navigation bounds ───
+function updateNavButtons() {
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  if(state.period==='dia') {
+    const idx = sortedDates.indexOf(state.date);
+    btnPrev.disabled = idx <= 0;
+    btnNext.disabled = idx >= sortedDates.length - 1;
+  } else {
+    btnPrev.disabled = false;
+    btnNext.disabled = false;
+  }
+  btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
+  btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
+  btnPrev.style.cursor = btnPrev.disabled ? 'default' : 'pointer';
+  btnNext.style.cursor = btnNext.disabled ? 'default' : 'pointer';
+}
+
+// ─── No data state ───
+function renderEmpty() {
+  const label = getDateLabel();
+  document.getElementById('hero-date').textContent = label;
+  document.getElementById('date-display').textContent = label;
+  const emptyMsg = `<div class="section"><div class="container" style="text-align:center;padding:60px 20px">
+    <div style="font-size:2.5rem;margin-bottom:12px">📭</div>
+    <div style="font-size:1.1rem;font-weight:600;margin-bottom:6px">Sem dados para este per\u00edodo</div>
+    <div style="color:var(--text-light);font-size:.9rem">Dados dispon\u00edveis: ${sortedDates[0]} a ${sortedDates[sortedDates.length-1]}</div>
+  </div></div>`;
+  ['cards-section','ai-section','funnel-section','charts-section','table-section','campaigns-section','period-metrics','stripe-section','segments-section','economics-section'].forEach(id => document.getElementById(id).innerHTML='');
+  document.getElementById('cards-section').innerHTML = emptyMsg;
+  document.getElementById('goal-section').innerHTML = '';
+  document.getElementById('kpi-pills').innerHTML = '';
+}
+
+// ─── Main render ───
+function renderCampaigns(data) {
+  const camps = data.campaigns_agg;
+  if(!camps || !Object.keys(camps).length) { document.getElementById('campaigns-section').innerHTML=''; return; }
+  const sorted = Object.entries(camps).sort((a,b) => b[1].leads - a[1].leads);
+  let rows = '';
+  for(const [name, c] of sorted) {
+    const cpl = c.leads>0 ? c.spend/c.leads : 0;
+    const mqlRate = c.leads>0 ? c.mql/c.leads*100 : 0;
+    const active = state.campaign === name;
+    const label = c.display || name;
+    rows += `<tr style="${active?'background:#FFF3E0':''};cursor:pointer" onclick="document.getElementById('campaign-filter').value='${name}';state.campaign='${name}';renderAll()">
+      <td class="bold">${label.length>30?label.slice(0,27)+'...':label}</td>
+      <td class="num">${c.leads}</td>
+      <td class="num">${c.mql} <span style="font-size:.75rem;color:var(--text-light)">(${fp(mqlRate)})</span></td>
+      <td class="num bold">${c.pagantes}</td>
+      <td class="num">${fm(c.spend)}</td>
+      <td class="num">${fm(cpl)}</td>
+    </tr>`;
+  }
+  document.getElementById('campaigns-section').innerHTML = `
+    <div class="section"><div class="container">
+      <div class="section-title">\uD83C\uDFAF Campanhas ${state.campaign!=='all'?'<span style="color:var(--accent);font-size:.75rem">(filtrando: '+(allCampaigns.get(state.campaign)||state.campaign)+')</span>':''}</div>
+      <table class="data-table"><thead><tr>
+        <th>Campanha</th><th class="num">Leads</th><th class="num">MQL</th>
+        <th class="num">Vendas</th><th class="num">Spend</th><th class="num">CPL</th>
+      </tr></thead><tbody>${rows}</tbody></table>
+      <div style="margin-top:8px;font-size:.8rem;color:var(--text-light)">Clique em uma campanha para filtrar o dashboard</div>
+    </div></div>`;
+}
+
+function renderAll() {
+  const dates = getPeriodDates(state.period, state.date);
+  const data = aggregate(dates, state.campaign);
+
+  updateNavButtons();
+
+  let comp = null;
+  if(state.compare) {
+    const compDates = getPrevPeriodDates(state.period, state.date);
+    comp = aggregate(compDates, state.campaign);
+  }
+
+  if(!data) {
+    renderEmpty();
+    return;
+  }
+
+  // Use live segments if viewing current date
+  if(dates.includes(INITIAL_DATE) && CURRENT.segments && Object.keys(CURRENT.segments).length) {
+    data.segments = {};
+    for(const[k,v] of Object.entries(CURRENT.segments)) data.segments[k] = v.mql||0;
+  }
+
+  document.getElementById('date-display').textContent = getDateLabel();
+
+  renderHero(data, comp);
+  renderCards(data, comp);
+  renderAI();
+  renderFunnel(data, comp);
+  renderCharts(dates);
+  renderTable(dates);
+  renderCampaigns(data);
+  renderPeriodMetrics(data, comp);
+  renderStripe(data);
+  renderSegments(data);
+  renderEconomics(data, comp);
+}
+
+// ─── Events ───
+document.getElementById('period-toggle').addEventListener('click', e => {
+  const btn = e.target.closest('[data-period]');
+  if(!btn) return;
+  document.querySelectorAll('#period-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.period = btn.dataset.period;
+  renderAll();
+});
+document.getElementById('btn-prev').addEventListener('click', () => navigate(-1));
+document.getElementById('btn-next').addEventListener('click', () => navigate(1));
+document.getElementById('chk-compare').addEventListener('change', e => {
+  state.compare = e.target.checked;
+  renderAll();
+});
+document.getElementById('campaign-filter').addEventListener('change', e => {
+  state.campaign = e.target.value;
+  renderAll();
+});
+
+// ─── Init ───
+renderAll();
+</script>
+</body>
+</html>
