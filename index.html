@@ -277,7 +277,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--
 <div id="economics-section"></div>
 
 <div class="footer">
-  Gerado em 23/04/2026 09:49 &middot; Metabase + PostHog + Stripe + Meta Ads
+  Gerado em 23/04/2026 09:57 &middot; Metabase + PostHog + Stripe + Meta Ads
 </div>
 
 <script>
@@ -1169,29 +1169,39 @@ function renderTable(dates) {
 }
 
 function renderPeriodMetrics(data, comp) {
-  function card(label, d) {
+  function card(label, d, prev) {
     const vendas = d.new_subs||d.pagantes;
+    const prevVendas = prev ? (prev.new_subs||prev.pagantes||0) : 0;
     const vendasLabel = d.new_subs_resurrected > 0
       ? num(vendas)+` <span style="font-size:.75rem;color:var(--text-light)">(${d.new_subs_fresh} novos + ${d.new_subs_resurrected} res.)</span>`
       : num(vendas);
+    const mrrLabel = d.new_mrr_resurrected > 0
+      ? fm(d.new_mrr)+` <span style="font-size:.75rem;color:var(--text-light)">(${fm(d.new_mrr_fresh)} fresh + ${fm(d.new_mrr_resurrected)} res.)</span>`
+      : fm(d.new_mrr);
+    // [label, formatted value, cur raw, prev raw, inverted?]
     const rows = [
-      ['Visitantes', num(d.visitors)],
-      ['Leads', num(d.leads)],
-      ['MQL', num(d.mql)],
-      ['Vendas', vendasLabel],
-      ['Investimento', fm(d.spend)],
-      ['CPL', fm(d.cpl)],
-      ['CAC', fm(d.cac)],
-      ['Lead &rarr; Pago', fp(d.lead_pago)],
+      ['Visitantes', num(d.visitors), d.visitors, prev?.visitors||0, false],
+      ['Leads', num(d.leads), d.leads, prev?.leads||0, false],
+      ['MQL', num(d.mql), d.mql, prev?.mql||0, false],
+      ['Vendas', vendasLabel, vendas, prevVendas, false],
+      ['Novo MRR', mrrLabel, d.new_mrr, prev?.new_mrr||0, false],
+      ['MRR Total', fm(d.total_mrr), d.total_mrr, prev?.total_mrr||0, false],
+      ['Investimento', fm(d.spend), d.spend, prev?.spend||0, false],
+      ['CPL', fm(d.cpl), d.cpl, prev?.cpl||0, true],
+      ['CAC', fm(d.cac), d.cac, prev?.cac||0, true],
+      ['Lead &rarr; Pago', fp(d.lead_pago), d.lead_pago, prev?.lead_pago||0, false],
     ];
     return `<div class="metric-card">
       <div class="metric-card-title">${label} (${d.days}d)</div>
-      ${rows.map(([l,v])=>`<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value">${v}</span></div>`).join('')}
+      ${rows.map(([l,v,cur,pv,inv])=>{
+        const b = prev ? badge(cur, pv, inv) : '';
+        return `<div class="metric-row"><span class="metric-label">${l}</span><span class="metric-value">${v}${b}</span></div>`;
+      }).join('')}
     </div>`;
   }
 
-  let html = card('Atual', data);
-  if(comp) html += card('Anterior', comp);
+  let html = card('Atual', data, comp);
+  if(comp) html += card('Anterior', comp, null);
 
   document.getElementById('period-metrics').innerHTML = `
     <div class="section"><div class="container">
