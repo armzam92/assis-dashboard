@@ -277,7 +277,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--
 <div id="economics-section"></div>
 
 <div class="footer">
-  Gerado em 23/04/2026 09:57 &middot; Metabase + PostHog + Stripe + Meta Ads
+  Gerado em 23/04/2026 10:03 &middot; Metabase + PostHog + Stripe + Meta Ads
 </div>
 
 <script>
@@ -1380,6 +1380,7 @@ function renderCampaigns(data) {
   let rows = '';
   for(const [name, c] of sorted) {
     const cpl = c.leads>0 ? c.spend/c.leads : 0;
+    const cpmql = c.mql>0 ? c.spend/c.mql : 0;
     const cac = c.pagantes>0 ? c.spend/c.pagantes : 0;
     const mqlRate = c.leads>0 ? c.mql/c.leads*100 : 0;
     const leadVendaRate = c.leads>0 ? c.pagantes/c.leads*100 : 0;
@@ -1399,6 +1400,7 @@ function renderCampaigns(data) {
       <td class="num" style="${convColor}">${fp(mqlVendaRate)}</td>
       <td class="num">${fm(c.spend)}</td>
       <td class="num">${fm(cpl)}</td>
+      <td class="num">${c.mql>0?fm(cpmql):'—'}</td>
       <td class="num">${c.pagantes>0?fm(cac):'—'}</td>
     </tr>`;
   }
@@ -1410,7 +1412,9 @@ function renderCampaigns(data) {
         <th class="num">Vendas</th>
         <th class="num" title="Lead → Venda">L→V</th>
         <th class="num" title="MQL → Venda">MQL→V</th>
-        <th class="num">Spend</th><th class="num">CPL</th><th class="num">CAC</th>
+        <th class="num">Spend</th><th class="num">CPL</th>
+        <th class="num" title="Custo por MQL">CPMQL</th>
+        <th class="num">CAC</th>
       </tr></thead><tbody>${rows}</tbody></table>
       <div style="margin-top:8px;font-size:.78rem;color:var(--text-light)">
         Ordenado por vendas. <span style="color:var(--positive)">Verde</span> = L→V ≥ 3%.
