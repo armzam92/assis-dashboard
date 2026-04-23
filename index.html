@@ -277,7 +277,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--
 <div id="economics-section"></div>
 
 <div class="footer">
-  Gerado em 23/04/2026 10:03 &middot; Metabase + PostHog + Stripe + Meta Ads
+  Gerado em 23/04/2026 10:19 &middot; Metabase + PostHog + Stripe + Meta Ads
 </div>
 
 <script>
@@ -355,12 +355,30 @@ const MRR_GROWTH_TARGET = 25;
 const state = { period: 'dia', date: INITIAL_DATE, compare: false, campaign: 'all' };
 const sortedDates = Object.keys(DAYS).sort();
 
-// Build campaign list from all snapshots — use key (utm_campaign) for filtering, name for display
-const allCampaigns = new Map(); // key -> display name
+// Canonicalize campaign key by Meta campaign_id so entries like
+// "ObjLeads_ChatBotIA_ca120240970930170374" and raw "120240970930170374"
+// merge into one row (Meta sends both for the same campaign).
+function canonicalCampaignKey(k) {
+  if(!k) return k;
+  const i = k.lastIndexOf('_ca');
+  if(i >= 0) {
+    const suf = k.slice(i+3);
+    if(/^\d+$/.test(suf)) return suf;
+  }
+  if(/^\d+$/.test(k)) return k;
+  return k;
+}
+
+// Build campaign list from all snapshots — use canonical key for filtering,
+// pick the most descriptive name for display (prefer named over raw digits).
+const allCampaigns = new Map(); // canonical_key -> display name
 for(const d of Object.values(DAYS)) {
   for(const c of (d.campaigns||[])) {
-    const key = c.key || c.name; // fallback for old snapshots without key
-    if(!allCampaigns.has(key)) allCampaigns.set(key, c.name);
+    const raw = c.key || c.name;
+    const key = canonicalCampaignKey(raw);
+    const existing = allCampaigns.get(key);
+    // Prefer a display that isn't just a numeric id
+    if(!existing || /^\d+$/.test(existing)) allCampaigns.set(key, c.name);
   }
 }
 const campaignSelect = document.getElementById('campaign-filter');
@@ -486,12 +504,13 @@ function aggregate(dates, campaignFilter) {
     r.days++;
 
     if(filterCampaign) {
-      const camp = (d.campaigns||[]).find(c => (c.key||c.name) === campaignFilter);
-      if(camp) {
-        r.leads += camp.leads||0;
-        r.mql += camp.mql||0;
-        r.pagantes += camp.pagantes||0;
-        r.spend += camp.spend||0;
+      // Sum all campaign entries with matching canonical key (handles merged duplicates).
+      for(const c of (d.campaigns||[])) {
+        if(canonicalCampaignKey(c.key||c.name) !== campaignFilter) continue;
+        r.leads += c.leads||0;
+        r.mql += c.mql||0;
+        r.pagantes += c.pagantes||0;
+        r.spend += c.spend||0;
       }
       r.visitors += d.visitors||0;
     } else {
@@ -546,10 +565,16 @@ function aggregate(dates, campaignFilter) {
     // Merge segments
     const segs = d.top_segments || {};
     for(const[k,v] of Object.entries(segs)) r.segments[k] = (r.segments[k]||0)+v;
-    // Aggregate campaigns across days (keyed by utm_campaign)
+    // Aggregate campaigns across days — merge by canonical Meta campaign_id
+    // (fixes leads-in-one-bucket / spend-in-another bug).
     for(const c of (d.campaigns||[])) {
-      const ck = c.key||c.name;
+      const raw = c.key||c.name;
+      const ck = canonicalCampaignKey(raw);
       if(!r.campaigns_agg[ck]) r.campaigns_agg[ck] = {display:c.name, leads:0,mql:0,pagantes:0,spend:0};
+      // Prefer descriptive display over raw digits if both variants show up
+      if(/^\d+$/.test(r.campaigns_agg[ck].display) && !/^\d+$/.test(c.name)) {
+        r.campaigns_agg[ck].display = c.name;
+      }
       r.campaigns_agg[ck].leads += c.leads||0;
       r.campaigns_agg[ck].mql += c.mql||0;
       r.campaigns_agg[ck].pagantes += c.pagantes||0;
